@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Bug, AlertTriangle } from 'lucide-react';
+import { Plus, Bug, Download, FileText } from 'lucide-react';
 
 export default function FindingsTracker({ findings, programs, onFindingCreated }) {
   const [showModal, setShowModal] = useState(false);
@@ -18,6 +18,16 @@ export default function FindingsTracker({ findings, programs, onFindingCreated }
     e.preventDefault();
     await onFindingCreated(formData);
     setShowModal(false);
+    setFormData({
+      programId: '',
+      title: '',
+      severity: 'MEDIUM',
+      status: 'DRAFT',
+      summary: '',
+      stepsToRepo: '',
+      impact: '',
+      suggestedFix: ''
+    });
   };
 
   const severityColor = {
@@ -52,19 +62,22 @@ export default function FindingsTracker({ findings, programs, onFindingCreated }
               <th className="p-4">Severity</th>
               <th className="p-4">Status</th>
               <th className="p-4">Tanggal</th>
+              <th className="p-4 text-right">Ekspor Laporan</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-700/50">
             {findings.length === 0 ? (
               <tr>
-                <td colSpan="5" className="p-4 text-center text-slate-500">Belum ada temuan dicatat.</td>
+                <td colSpan="6" className="p-4 text-center text-slate-500">
+                  Belum ada temuan dicatat.
+                </td>
               </tr>
             ) : (
               findings.map((item) => (
-                <tr key={item.id} className="hover:bg-slate-700/30">
+                <tr key={item.id} className="hover:bg-slate-700/30 transition-colors">
                   <td className="p-4 font-medium text-white flex items-center gap-2">
-                    <Bug size={16} className="text-indigo-400" />
-                    {item.title}
+                    <Bug size={16} className="text-indigo-400 shrink-0" />
+                    <span>{item.title}</span>
                   </td>
                   <td className="p-4">{item.program?.name || '-'}</td>
                   <td className="p-4">
@@ -79,6 +92,26 @@ export default function FindingsTracker({ findings, programs, onFindingCreated }
                   </td>
                   <td className="p-4 text-xs text-slate-400">
                     {new Date(item.createdAt).toLocaleDateString()}
+                  </td>
+                  <td className="p-4 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <a
+                        href={`http://localhost:5000/api/reports/${item.id}/markdown`}
+                        download
+                        title="Download Markdown Report"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs rounded font-medium border border-slate-600 transition"
+                      >
+                        <FileText size={12} /> .MD
+                      </a>
+                      <a
+                        href={`http://localhost:5000/api/reports/${item.id}/pdf`}
+                        download
+                        title="Download PDF Report"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded font-medium transition"
+                      >
+                        <Download size={12} /> .PDF
+                      </a>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -165,6 +198,26 @@ export default function FindingsTracker({ findings, programs, onFindingCreated }
                   value={formData.stepsToRepo}
                   onChange={(e) => setFormData({ ...formData, stepsToRepo: e.target.value })}
                   className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm text-white font-mono text-xs"
+                ></textarea>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Impact</label>
+                <textarea
+                  rows="2"
+                  value={formData.impact}
+                  onChange={(e) => setFormData({ ...formData, impact: e.target.value })}
+                  className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm text-white"
+                ></textarea>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Suggested Fix / Remediation</label>
+                <textarea
+                  rows="2"
+                  value={formData.suggestedFix}
+                  onChange={(e) => setFormData({ ...formData, suggestedFix: e.target.value })}
+                  className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm text-white"
                 ></textarea>
               </div>
 
