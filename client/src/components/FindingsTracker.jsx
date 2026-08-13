@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Plus, Bug, Download, FileText } from 'lucide-react';
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 export default function FindingsTracker({ findings, programs, onFindingCreated }) {
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
@@ -96,7 +98,7 @@ export default function FindingsTracker({ findings, programs, onFindingCreated }
                   <td className="p-4 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <a
-                        href={`http://localhost:5000/api/reports/${item.id}/markdown`}
+                        href={`${API_BASE}/api/reports/${item.id}/markdown`}
                         download
                         title="Download Markdown Report"
                         className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs rounded font-medium border border-slate-600 transition"
@@ -104,7 +106,7 @@ export default function FindingsTracker({ findings, programs, onFindingCreated }
                         <FileText size={12} /> .MD
                       </a>
                       <a
-                        href={`http://localhost:5000/api/reports/${item.id}/pdf`}
+                        href={`${API_BASE}/api/reports/${item.id}/pdf`}
                         download
                         title="Download PDF Report"
                         className="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded font-medium transition"
