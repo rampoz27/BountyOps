@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Plus, Bug, Download, FileText } from 'lucide-react';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import API from '../services/api';
 
 export default function FindingsTracker({ findings, programs, onFindingCreated }) {
   const [showModal, setShowModal] = useState(false);
+  const [downloadingId, setDownloadingId] = useState(null);
   const [formData, setFormData] = useState({
     programId: '',
     title: '',
@@ -30,6 +30,29 @@ export default function FindingsTracker({ findings, programs, onFindingCreated }
       impact: '',
       suggestedFix: ''
     });
+  };
+
+  // Diambil lewat instance axios `API` (bukan <a href> langsung) supaya
+  // header x-api-key ikut terkirim saat auth API key diaktifkan di server.
+  const downloadReport = async (findingId, format, titleForFilename) => {
+    setDownloadingId(`${findingId}-${format}`);
+    try {
+      const res = await API.get(`/reports/${findingId}/${format}`, { responseType: 'blob' });
+      const safeTitle = (titleForFilename || 'report').replace(/[^a-zA-Z0-9_-]/g, '_');
+      const ext = format === 'pdf' ? 'pdf' : 'md';
+      const blobUrl = window.URL.createObjectURL(res.data);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `${safeTitle}.${ext}`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      alert('Gagal mengunduh laporan: ' + err.message);
+    } finally {
+      setDownloadingId(null);
+    }
   };
 
   const severityColor = {
@@ -97,22 +120,24 @@ export default function FindingsTracker({ findings, programs, onFindingCreated }
                   </td>
                   <td className="p-4 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <a
-                        href={`${API_BASE}/api/reports/${item.id}/markdown`}
-                        download
+                      <button
+                        type="button"
+                        onClick={() => downloadReport(item.id, 'markdown', item.title)}
+                        disabled={downloadingId === `${item.id}-markdown`}
                         title="Download Markdown Report"
-                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs rounded font-medium border border-slate-600 transition"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-200 text-xs rounded font-medium border border-slate-600 transition"
                       >
                         <FileText size={12} /> .MD
-                      </a>
-                      <a
-                        href={`${API_BASE}/api/reports/${item.id}/pdf`}
-                        download
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => downloadReport(item.id, 'pdf', item.title)}
+                        disabled={downloadingId === `${item.id}-pdf`}
                         title="Download PDF Report"
-                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded font-medium transition"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs rounded font-medium transition"
                       >
                         <Download size={12} /> .PDF
-                      </a>
+                      </button>
                     </div>
                   </td>
                 </tr>
