@@ -7,7 +7,6 @@ import htmlPdf from 'html-pdf-node';
  * @returns {Promise<Buffer>} PDF File Buffer
  */
 export async function convertMarkdownToPdfBuffer(title, markdownContent) {
-  // Simple MD to HTML conversion for layout structuring
   const formattedHtmlContent = markdownContent
     .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold mb-4 text-slate-900 border-b pb-2">$1</h1>')
     .replace(/^## (.*$)/gim, '<h2 class="text-lg font-semibold mt-6 mb-2 text-indigo-900 border-b border-slate-200">$1</h2>')
@@ -38,11 +37,5 @@ export async function convertMarkdownToPdfBuffer(title, markdownContent) {
   const options = { format: 'A4', margin: { top: '20px', bottom: '20px', left: '20px', right: '20px' } };
   const file = { content: htmlDocument };
 
-  return new Promise((resolve, reject) => {
-    htmlPdf.generatePdf(file, options).then(pdfBuffer => {
-      resolve(pdfBuffer);
-    }).catch(error => {
-      reject(error);
-    });
-  });
+  return await htmlPdf.generatePdf(file, options);
 }
