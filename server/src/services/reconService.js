@@ -1,11 +1,12 @@
 import axios from 'axios';
+import { assertSafeUrl } from '../utils/ssrfGuard.js';
 
 /**
  * Mengambil subdomain secara pasif dari Certificate Transparency logs (crt.sh)
  */
 export async function fetchSubdomainsFromCrtSh(domain) {
   const cleanDomain = domain.replace(/^\*\./, '').trim();
-  const url = `https://crt.sh/?q=%25.${cleanDomain}&output=json`;
+  const url = `https://crt.sh/?q=${encodeURIComponent(`%.${cleanDomain}`)}&output=json`;
 
   try {
     const response = await axios.get(url, {
@@ -43,29 +44,52 @@ export async function fetchSubdomainsFromCrtSh(domain) {
   }
 }
 
+const MAX_REDIRECT_HOPS = 3;
+
 /**
- * Deteksi pasif teknologi & header dari HTTP GET standar
+ * Deteksi pasif teknologi & header dari HTTP GET standar.
+ *
+ * Setiap URL (termasuk setiap hop redirect) divalidasi dengan assertSafeUrl
+ * sebelum di-fetch, supaya asset identifier yang menunjuk ke jaringan
+ * internal/localhost/metadata endpoint (SSRF) ditolak alih-alih diminta oleh
+ * server ini.
  */
 export async function fetchPassiveHeaders(targetUrl) {
+  let currentUrl = targetUrl.startsWith('http') ? targetUrl : `https://${targetUrl}`;
+
   try {
-    const url = targetUrl.startsWith('http') ? targetUrl : `https://${targetUrl}`;
-    const response = await axios.get(url, {
-      timeout: 8000,
-      maxRedirects: 3,
-      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
-    });
+    for (let hop = 0; hop <= MAX_REDIRECT_HOPS; hop++) {
+      const check = await assertSafeUrl(currentUrl);
+      if (!check.safe) {
+        throw new Error(`Target tidak diizinkan (${check.reason})`);
+      }
 
-    const headers = response.headers;
-    const techStack = [];
+      const response = await axios.get(currentUrl, {
+        timeout: 8000,
+        maxRedirects: 0,
+        validateStatus: (status) => (status >= 200 && status < 300) || (status >= 300 && status < 400),
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
+      });
 
-    if (headers['server']) techStack.push(`Server: ${headers['server']}`);
-    if (headers['x-powered-by']) techStack.push(`Powered-By: ${headers['x-powered-by']}`);
-    if (headers['via']) techStack.push(`Via: ${headers['via']}`);
+      if (response.status >= 300 && response.status < 400 && response.headers.location) {
+        currentUrl = new URL(response.headers.location, currentUrl).toString();
+        continue;
+      }
 
-    return {
-      headers: JSON.stringify(headers),
-      techStack: JSON.stringify(techStack)
-    };
+      const headers = response.headers;
+      const techStack = [];
+
+      if (headers['server']) techStack.push(`Server: ${headers['server']}`);
+      if (headers['x-powered-by']) techStack.push(`Powered-By: ${headers['x-powered-by']}`);
+      if (headers['via']) techStack.push(`Via: ${headers['via']}`);
+
+      return {
+        headers: JSON.stringify(headers),
+        techStack: JSON.stringify(techStack)
+      };
+    }
+
+    throw new Error('Terlalu banyak redirect');
   } catch (error) {
     return {
       headers: JSON.stringify({ error: error.message }),
