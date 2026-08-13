@@ -5,7 +5,16 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        hacker: {
+          bg: '#020617',
+          card: '#090d16',
+          border: '#10b981',
+          green: '#10b981'
+        }
+      }
+    },
   },
   plugins: [],
 }
