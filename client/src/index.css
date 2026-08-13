@@ -1,13 +1,14 @@
-@import "tailwindcss/base";
-@import "tailwindcss/components";
-@import "tailwindcss/utilities";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @layer base {
   body {
-    @apply bg-black text-emerald-400 font-mono antialiased min-h-screen selection:bg-emerald-500 selection:text-black;
+    @apply bg-slate-950 text-emerald-400 font-mono antialiased min-h-screen selection:bg-emerald-500 selection:text-black;
   }
 }
 
+/* Custom Hacker Glow & Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -22,28 +23,10 @@
   border-radius: 2px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #10b981;
+button, input, select, textarea {
+  @apply bg-slate-900 border border-emerald-500/40 text-emerald-300 rounded px-3 py-1.5 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 transition-all;
 }
 
-.neon-border {
-  border: 1px solid #10b981;
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
-}
-
-.neon-text {
-  text-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
-}
-
-.neon-button {
-  background-color: #022c22;
-  border: 1px solid #10b981;
-  color: #34d399;
-  transition: all 0.2s ease-in-out;
-}
-
-.neon-button:hover {
-  background-color: #059669;
-  color: #000000;
-  box-shadow: 0 0 15px rgba(16, 185, 129, 0.8);
+button {
+  @apply hover:bg-emerald-500/20 hover:text-emerald-200 cursor-pointer font-semibold active:scale-95;
 }
