@@ -1,0 +1,73 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Program {
+  id          String    @id @default(uuid())
+  name        String
+  platform    String    // HackerOne, Bugcrowd, Intigriti, Private
+  policyUrl   String?
+  minReward   Float?
+  maxReward   Float?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  assets      Asset[]
+  findings    Finding[]
+  payouts     Payout[]
+}
+
+model Asset {
+  id          String     @id @default(uuid())
+  programId   String
+  identifier  String     // e.g., *.example.com, api.target.com
+  type        String     // DOMAIN, WILDCARD, IP, MOBILE_APP
+  inScope     Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+
+  program     Program    @relation(fields: [programId], references: [id], onDelete: Cascade)
+  snapshots   Snapshot[]
+}
+
+model Snapshot {
+  id          String   @id @default(uuid())
+  assetId     String
+  subdomains  String   // JSON stringified list of subdomains
+  headers     String?  // JSON stringified headers
+  techStack   String?  // JSON stringified tech stack
+  fetchedAt   DateTime @default(now())
+
+  asset       Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+}
+
+model Finding {
+  id           String   @id @default(uuid())
+  programId    String
+  title        String
+  severity     String   // CRITICAL, HIGH, MEDIUM, LOW, INFO
+  status       String   @default("DRAFT") // DRAFT, SUBMITTED, TRIAGED, PAID
+  summary      String
+  stepsToRepo  String
+  impact       String
+  suggestedFix String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  program      Program  @relation(fields: [programId], references: [id], onDelete: Cascade)
+}
+
+model Payout {
+  id        String   @id @default(uuid())
+  programId String
+  amount    Float
+  currency  String   @default("USD")
+  paidAt    DateTime @default(now())
+  notes     String?
+
+  program   Program  @relation(fields: [programId], references: [id], onDelete: Cascade)
+}
