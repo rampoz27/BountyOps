@@ -1,11 +1,15 @@
 import axios from 'axios';
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'https://bountyops-backend.onrender.com';
+const API_KEY = import.meta.env.VITE_API_KEY;
 
 const API = axios.create({
   baseURL: `${BASE_URL.replace(/\/$/, '')}/api`,
   headers: {
     'Content-Type': 'application/json',
+    // Dikirim hanya jika VITE_API_KEY diset di .env client — harus sama
+    // dengan API_KEY di server (lihat server/src/index.js).
+    ...(API_KEY ? { 'x-api-key': API_KEY } : {}),
   },
 });
 
