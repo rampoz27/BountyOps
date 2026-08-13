@@ -8,7 +8,6 @@
   }
 }
 
-/* Custom Cyberpunk / Hacker Elements */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -27,7 +26,6 @@
   background: #10b981;
 }
 
-/* Glow Effects */
 .neon-border {
   border: 1px solid #10b981;
   box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
