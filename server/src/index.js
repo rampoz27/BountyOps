@@ -9,6 +9,12 @@ import {
 } from './controllers/bountyController.js';
 import { initScheduler } from './services/scheduler.js';
 
+import { downloadMarkdownReport, downloadPdfReport } from './controllers/reportController.js';
+
+// Rute Tambahan untuk Ekspor Laporan
+app.get('/api/reports/:findingId/markdown', downloadMarkdownReport);
+app.get('/api/reports/:findingId/pdf', downloadPdfReport);
+
 dotenv.config();
 
 const app = express();
